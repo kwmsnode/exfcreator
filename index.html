@@ -65,11 +65,25 @@ Copyright (C) 2026 kwmsnode
         <h3>概要</h3>
         <p>EXFファイルに含める文字として以下の文字が選択されました。確認し、必要であれば追加してください。</p>
         <p>EXF識別名も作成します。EXF識別名は、＜フォント識別名＞-＜EXF作成者名＞のように構成される16バイトの固有の識別IDです。すべて半角のA~Z,0~9のみを使用します。</p>
+        <p>フォントファミリーも設定します。フォントファミリーはそのフォントがどのようなものであるかを示し、それを使ってフォントの指定もできます。</p>
         <h3>確認と追加</h3>
         <textarea oninput="calctextarea()" rows="15" style="width: 90%;" id="textarea-includechar"></textarea>
         <p><span id="span-includecharinfo">エラー</span></p>
-        <p>EXF識別名（それぞれ8文字ずつ・全32文字・A~Z,0~9のみ使用可能）:<br><input id="input-exfidfontname" type="text" placeholder="フォント識別名">-<input id="input-exfidauthor" type="text" placeholder="EXF作成者"></p>
+        <p>EXF識別名（それぞれ8文字ずつ・全16文字・A~Z,0~9のみ使用可能）:<br><input id="input-exfidfontname" type="text" placeholder="フォント識別名">-<input id="input-exfidauthor" type="text" placeholder="EXF作成者"></p>
         <p>例: NOTOSAJP-KWMSNODE</p>
+        <p>フォントファミリー:<br>
+            <select id="select-fontfamily">
+                <option value="00">sans-serif（サンセリフ体）</option>
+                <option value="01">serif（セリフ体）</option>
+                <option value="02">monospace（等幅）</option>
+                <option value="03">cursive（手書き風）</option>
+                <option value="04">fantasy（装飾系）</option>
+                <option value="05">emoji（絵文字用）</option>
+                <option value="06">math（数学用）</option>
+                <option value="07">pixel（ピクセルフォント）</option>
+                <option value="FF">unknown（不明）</option>
+            </select>
+        </p>
         <p><button onclick="confirmchars()">チェックして処理を開始</button></p>
     </div>
     <div class="content" id="content-debugvalidate" hidden>
@@ -89,7 +103,7 @@ Copyright (C) 2026 kwmsnode
         <p>処理の内容:</p>
         <p><span id="span-loadinginformation"></span></p>
         <p><img src="img/default-black.svg" alt="読み込みマーク" style="height: 3rem;"></p>
-        <p><canvas id="canvas-generate16" width="16px" height="16px" hidden></canvas><canvas id="canvas-generate" width="24px" height="24px" hidden></canvas></p>
+        <p><canvas id="canvas-generate16" width="16" height="16" hidden></canvas><canvas id="canvas-generate" width="24" height="24" hidden></canvas></p>
     </div>
     <div class="content" id="content-finished" hidden>
         <h2>完了</h2>
@@ -304,8 +318,10 @@ Copyright (C) 2026 kwmsnode
                 span_loadinginformation.innerHTML = 'エラーで操作は終了しました。';
                 return;
             }
-            // 予約領域（1バイト）
-            const reserved1 = '00';
+            // リトルエンディアンにする
+            const fontcount_16fixed = fontcount_16.substring(2,4) + fontcount_16.substring(0,2);
+            // フォントファミリー（1バイト）
+            const reserved1 = document.getElementById('select-fontfamily').value;
             // exf識別情報（8バイト）
             const exfidchar = input_exfidfontname.value + input_exfidauthor.value;
             let exfidchar_hex = '';
@@ -319,7 +335,7 @@ Copyright (C) 2026 kwmsnode
                 finalfontpart += getfontpartbinary(item);
             })
             // つなげる
-            return magicnumber + formatvar + fontcount_16 + reserved1 + exfidchar_hex + finalfontpart;
+            return magicnumber + formatvar + reserved1 + '0000' + fontcount_16fixed + '0000' + exfidchar_hex + finalfontpart;
         }
 
         function getfontpartbinary(char){
