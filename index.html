@@ -314,12 +314,12 @@ Copyright (C) 2026 kwmsnode
             const fontcount_10 = Array.from(textarea_includechar.value).length;
             const fontcount_16 = fontcount_10.toString(16).padStart(4, '0');
             if(fontcount_16.length > 4){
-                alert('EXFフォーマットバージョン0では、最高2バイト数の文字（65536文字）を格納できます。このメッセージが表示された場合、詳細な状況を添えてkwmsnodeまでご連絡ください。新しいEXFフォーマットバージョンについて検討します。');
+                alert('EXFフォーマットバージョン0では、最高2バイト数の文字（65535文字）を格納できます。このメッセージが表示された場合、詳細な状況を添えてkwmsnodeまでご連絡ください。新しいEXFフォーマットバージョンについて検討します。');
                 span_loadinginformation.innerHTML = 'エラーで操作は終了しました。';
                 return;
             }
             // フォントファミリー（1バイト）
-            const reserved1 = document.getElementById('select-fontfamily').value;
+            const fontfamily = document.getElementById('select-fontfamily').value;
             // exf識別情報（8バイト）
             const exfidchar = input_exfidfontname.value + input_exfidauthor.value;
             let exfidchar_hex = '';
@@ -333,27 +333,14 @@ Copyright (C) 2026 kwmsnode
                 finalfontpart += getfontpartbinary(item);
             })
             // つなげる
-            return magicnumber + formatvar + reserved1 + '0000' + fontcount_16 + '0000' + exfidchar_hex + finalfontpart;
+            return magicnumber + formatvar + fontfamily + '0000' + fontcount_16 + '0000' + exfidchar_hex + finalfontpart;
         }
 
         function getfontpartbinary(char){
             // UTF32の取得
             // Unicode番号の取得
             const charcode = char.codePointAt(0);
-            // 4バイトの生データ領域準備
-            const buffer = new ArrayBuffer(4);
-            // 数値書き込み用
-            const view = new DataView(buffer);
-            // ビッグエンディアンで4バイト書き込み
-            view.setUint32(0, charcode, false);
-            // 作成
-            const bytearray = new Uint8Array(buffer);
-            let charcodehex = '';
-            for(let i = 0; i < bytearray.length; i++){
-                const byte = bytearray[i];
-                const hex = byte.toString(16).padStart(2, '0');
-                charcodehex += hex;
-            }
+            const charcodehex = charcode.toString(16).padStart(8, '0');
 
             // 文字幅の取得
             canvas_generate16_ctx.font = '16px myfont';
