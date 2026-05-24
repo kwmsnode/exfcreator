@@ -329,6 +329,9 @@ Copyright (C) 2026 kwmsnode
             // フォント領域
             let finalfontpart = '';
             const charsarray = Array.from(textarea_includechar.value);
+            charsarray.sort(function(a, b){
+                return a.codePointAt(0) - b.codePointAt(0);
+            });
             charsarray.forEach(function(item){
                 finalfontpart += getfontpartbinary(item);
             })
